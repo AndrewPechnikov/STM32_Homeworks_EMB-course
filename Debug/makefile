@@ -60,8 +60,8 @@ all: main-build
 main-build: HW1_STM32_LED_BLINK.elf secondary-outputs
 
 # Tool invocations
-HW1_STM32_LED_BLINK.elf HW1_STM32_LED_BLINK.map: $(OBJS) $(USER_OBJS) C:\Users\a.pechnikov\Documents\PlatformIO\Projects\HW1_STM32_LED_BLINK\HW1_STM32_LED_BLINK\STM32F401CCUX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "HW1_STM32_LED_BLINK.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\a.pechnikov\Documents\PlatformIO\Projects\HW1_STM32_LED_BLINK\HW1_STM32_LED_BLINK\STM32F401CCUX_FLASH.ld" --specs=nosys.specs -Wl,-Map="HW1_STM32_LED_BLINK.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+HW1_STM32_LED_BLINK.elf HW1_STM32_LED_BLINK.map: $(OBJS) $(USER_OBJS) D:\Course\STM32_Homeworks_EMB-course\STM32F401CCUX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "HW1_STM32_LED_BLINK.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"D:\Course\STM32_Homeworks_EMB-course\STM32F401CCUX_FLASH.ld" --specs=nosys.specs -Wl,-Map="HW1_STM32_LED_BLINK.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 

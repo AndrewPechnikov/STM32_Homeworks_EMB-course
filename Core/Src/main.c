@@ -31,7 +31,10 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
+#define LED_RED_PIN    GPIO_PIN_10
+#define LED_BLUE_PIN   GPIO_PIN_11
+#define LED_GREEN_PIN  GPIO_PIN_12
+#define LED_TWO_PIN    GPIO_PIN_9
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -49,7 +52,8 @@
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 /* USER CODE BEGIN PFP */
-
+void advanced_blinking(int LED1, int LED2, int LED3);
+void blinking(int LED1, int LED2, int LED3);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -94,6 +98,17 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+
+	  advanced_blinking(LED_RED_PIN, LED_BLUE_PIN, LED_GREEN_PIN);
+
+
+	  HAL_GPIO_WritePin(GPIOA ,LED_TWO_PIN, GPIO_PIN_SET);
+	  HAL_Delay(1000);
+	  HAL_GPIO_WritePin(GPIOA ,LED_TWO_PIN, GPIO_PIN_RESET);
+	  HAL_Delay(1000);
+
+	  blinking(LED_RED_PIN, LED_BLUE_PIN, LED_GREEN_PIN);
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -158,10 +173,10 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOA_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10|GPIO_PIN_11|GPIO_PIN_12, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9|GPIO_PIN_10|GPIO_PIN_11|GPIO_PIN_12, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : PA10 PA11 PA12 */
-  GPIO_InitStruct.Pin = GPIO_PIN_10|GPIO_PIN_11|GPIO_PIN_12;
+  /*Configure GPIO pins : PA9 PA10 PA11 PA12 */
+  GPIO_InitStruct.Pin = GPIO_PIN_9|GPIO_PIN_10|GPIO_PIN_11|GPIO_PIN_12;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -173,6 +188,54 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+void blinking(int LED1, int LED2, int LED3){
+
+  HAL_GPIO_WritePin(GPIOA ,LED1, GPIO_PIN_SET);
+  HAL_Delay(1000);
+  HAL_GPIO_WritePin(GPIOA ,LED1, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA ,LED2, GPIO_PIN_SET);
+  HAL_Delay(1000);
+  HAL_GPIO_WritePin(GPIOA ,LED2, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA ,LED3, GPIO_PIN_SET);
+  HAL_Delay(1000);
+  HAL_GPIO_WritePin(GPIOA ,LED3, GPIO_PIN_RESET);
+
+}
+
+
+void advanced_blinking(int LED1, int LED2, int LED3){
+  for(int i = 0; i < 4; i++){
+	HAL_GPIO_WritePin(GPIOA ,LED1, GPIO_PIN_SET);
+    HAL_Delay(100);
+    HAL_GPIO_WritePin(GPIOA ,LED1, GPIO_PIN_RESET);
+    HAL_Delay(100);
+  }
+
+   for(int i = 0; i < 4; i++){
+	HAL_GPIO_WritePin(GPIOA ,LED3, GPIO_PIN_SET);
+    HAL_Delay(100);
+    HAL_GPIO_WritePin(GPIOA ,LED3, GPIO_PIN_RESET);
+    HAL_Delay(100);
+  }
+
+  for(int i = 0; i < 4; i++){
+	HAL_GPIO_WritePin(GPIOA ,LED2, GPIO_PIN_SET);
+    HAL_Delay(100);
+    HAL_GPIO_WritePin(GPIOA ,LED2, GPIO_PIN_RESET);
+    HAL_Delay(100);
+  }
+
+  for(int i = 0; i < 4; i++){
+	HAL_GPIO_WritePin(GPIOA ,LED3, GPIO_PIN_SET);
+    HAL_Delay(100);
+    HAL_GPIO_WritePin(GPIOA ,LED3, GPIO_PIN_RESET);
+    HAL_Delay(100);
+  }
+
+}
+
+
+
 
 /* USER CODE END 4 */
 
