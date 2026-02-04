@@ -22,6 +22,9 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
+#include "stdbool.h"
+#include <stdio.h>
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -31,10 +34,13 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define LED_RED_PIN    GPIO_PIN_10
-#define LED_BLUE_PIN   GPIO_PIN_11
-#define LED_GREEN_PIN  GPIO_PIN_12
-#define LED_TWO_PIN    GPIO_PIN_9
+#define LED_RED_PIN GPIO_PIN_11
+#define LED_GREEN_PIN GPIO_PIN_10
+#define FIRST_BUTTON_PIN GPIO_PIN_15
+#define SECOND_BUTTON_PIN GPIO_PIN_8
+#define SHORT_TIME_PAUSE 100
+#define LONG_TIME_PAUSE 1000
+#define DEBOUNCE_TIME 50
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -43,8 +49,21 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
+
+/* USER CODE BEGIN PFP */
+
+
+/* USER CODE END PV */
+
+/* Private function prototypes -----------------------------------------------*/
+void SystemClock_Config(void);
+static void MX_GPIO_Init(void);
+static void MX_USART2_UART_Init(void);
+/* USER CODE BEGIN PFP */
+
 
 /* USER CODE END PV */
 
@@ -52,12 +71,49 @@
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 /* USER CODE BEGIN PFP */
-void advanced_blinking(int LED1, int LED2, int LED3);
-void blinking(int LED1, int LED2, int LED3);
+
+
+/* USER CODE END PV */
+
+/* Private function prototypes -----------------------------------------------*/
+void SystemClock_Config(void);
+static void MX_GPIO_Init(void);
+
+
+
+/* USER CODE BEGIN PFP */
+/*0 - повільне перемикання
+1 - швидке перемикання
+2 - одночасне перемикання*/
+char mode = 0;
+
+/*0 - не має закільцьованого перемикання
+1 - є закільцьоване перемикання з повернення на mode 0 при одночасному натисканні */
+const bool CYCLIC_MODE = true;
+
+/* USER CODE END PV */
+
+
+
+void switchLedLogika(char mode);
+void fast_blinking(int LED1, int LED2);
+void blinking(int LED1, int LED2);
+
+int _write(int file, char *ptr, int len)
+{
+    HAL_UART_Transmit(&huart2, (uint8_t*)ptr, len, HAL_MAX_DELAY);
+    return len;
+}
+
+
+
+
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
+
 
 /* USER CODE END 0 */
 
@@ -79,6 +135,9 @@ int main(void)
 
   /* USER CODE BEGIN Init */
 
+
+
+
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -90,8 +149,10 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
 
+  printf("UART is working!!!");
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -99,15 +160,26 @@ int main(void)
   while (1)
   {
 
-	  advanced_blinking(LED_RED_PIN, LED_BLUE_PIN, LED_GREEN_PIN);
+
+	  bool firstButton = (HAL_GPIO_ReadPin(GPIOA, FIRST_BUTTON_PIN) == GPIO_PIN_SET);
+	  bool secondButton = (HAL_GPIO_ReadPin(GPIOA, SECOND_BUTTON_PIN) == GPIO_PIN_SET);
 
 
-	  HAL_GPIO_WritePin(GPIOA ,LED_TWO_PIN, GPIO_PIN_SET);
-	  HAL_Delay(1000);
-	  HAL_GPIO_WritePin(GPIOA ,LED_TWO_PIN, GPIO_PIN_RESET);
-	  HAL_Delay(1000);
-
-	  blinking(LED_RED_PIN, LED_BLUE_PIN, LED_GREEN_PIN);
+	  HAL_Delay(DEBOUNCE_TIME);
+	  if(!CYCLIC_MODE){
+	    mode = (firstButton) ? 1 : mode;
+	    mode = (secondButton) ? 2 : mode;
+	    mode = (secondButton && firstButton) ? 0 : mode;
+	    printf("Mode = %d\r\n", mode);
+	    switchLedLogika(mode);
+	  }
+	  else{
+	    mode = (firstButton) ? ((mode + 1) % 3) : mode;
+	    mode = (secondButton) ? ((mode - 1 + 3) % 3) : mode;
+	    mode = (secondButton && firstButton) ? 0 : mode;
+	    printf("Mode = %d\r\n", mode);
+	    switchLedLogika(mode);
+	  }
 
     /* USER CODE END WHILE */
 
@@ -158,6 +230,39 @@ void SystemClock_Config(void)
 }
 
 /**
+  * @brief USART2 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_USART2_UART_Init(void)
+{
+
+  /* USER CODE BEGIN USART2_Init 0 */
+
+  /* USER CODE END USART2_Init 0 */
+
+  /* USER CODE BEGIN USART2_Init 1 */
+
+  /* USER CODE END USART2_Init 1 */
+  huart2.Instance = USART2;
+  huart2.Init.BaudRate = 115200;
+  huart2.Init.WordLength = UART_WORDLENGTH_8B;
+  huart2.Init.StopBits = UART_STOPBITS_1;
+  huart2.Init.Parity = UART_PARITY_NONE;
+  huart2.Init.Mode = UART_MODE_TX_RX;
+  huart2.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart2.Init.OverSampling = UART_OVERSAMPLING_16;
+  if (HAL_UART_Init(&huart2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN USART2_Init 2 */
+
+  /* USER CODE END USART2_Init 2 */
+
+}
+
+/**
   * @brief GPIO Initialization Function
   * @param None
   * @retval None
@@ -173,10 +278,16 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOA_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9|GPIO_PIN_10|GPIO_PIN_11|GPIO_PIN_12, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10|GPIO_PIN_11, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : PA9 PA10 PA11 PA12 */
-  GPIO_InitStruct.Pin = GPIO_PIN_9|GPIO_PIN_10|GPIO_PIN_11|GPIO_PIN_12;
+  /*Configure GPIO pins : PA8 PA15 */
+  GPIO_InitStruct.Pin = GPIO_PIN_8|GPIO_PIN_15;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : PA10 PA11 */
+  GPIO_InitStruct.Pin = GPIO_PIN_10|GPIO_PIN_11;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -184,55 +295,71 @@ static void MX_GPIO_Init(void)
 
   /* USER CODE BEGIN MX_GPIO_Init_2 */
 
+
   /* USER CODE END MX_GPIO_Init_2 */
 }
 
 /* USER CODE BEGIN 4 */
-void blinking(int LED1, int LED2, int LED3){
+void blinking(int LED1, int LED2){
 
   HAL_GPIO_WritePin(GPIOA ,LED1, GPIO_PIN_SET);
-  HAL_Delay(1000);
+  HAL_Delay(LONG_TIME_PAUSE);
   HAL_GPIO_WritePin(GPIOA ,LED1, GPIO_PIN_RESET);
   HAL_GPIO_WritePin(GPIOA ,LED2, GPIO_PIN_SET);
-  HAL_Delay(1000);
+  HAL_Delay(LONG_TIME_PAUSE);
   HAL_GPIO_WritePin(GPIOA ,LED2, GPIO_PIN_RESET);
-  HAL_GPIO_WritePin(GPIOA ,LED3, GPIO_PIN_SET);
-  HAL_Delay(1000);
-  HAL_GPIO_WritePin(GPIOA ,LED3, GPIO_PIN_RESET);
-
 }
 
 
-void advanced_blinking(int LED1, int LED2, int LED3){
+void fast_blinking(int LED1, int LED2){
   for(int i = 0; i < 4; i++){
 	HAL_GPIO_WritePin(GPIOA ,LED1, GPIO_PIN_SET);
-    HAL_Delay(100);
+    HAL_Delay(SHORT_TIME_PAUSE);
     HAL_GPIO_WritePin(GPIOA ,LED1, GPIO_PIN_RESET);
-    HAL_Delay(100);
-  }
-
-   for(int i = 0; i < 4; i++){
-	HAL_GPIO_WritePin(GPIOA ,LED3, GPIO_PIN_SET);
-    HAL_Delay(100);
-    HAL_GPIO_WritePin(GPIOA ,LED3, GPIO_PIN_RESET);
-    HAL_Delay(100);
+    HAL_Delay(SHORT_TIME_PAUSE);
   }
 
   for(int i = 0; i < 4; i++){
 	HAL_GPIO_WritePin(GPIOA ,LED2, GPIO_PIN_SET);
-    HAL_Delay(100);
+    HAL_Delay(SHORT_TIME_PAUSE);
     HAL_GPIO_WritePin(GPIOA ,LED2, GPIO_PIN_RESET);
-    HAL_Delay(100);
-  }
-
-  for(int i = 0; i < 4; i++){
-	HAL_GPIO_WritePin(GPIOA ,LED3, GPIO_PIN_SET);
-    HAL_Delay(100);
-    HAL_GPIO_WritePin(GPIOA ,LED3, GPIO_PIN_RESET);
-    HAL_Delay(100);
+    HAL_Delay(SHORT_TIME_PAUSE);
   }
 
 }
+
+void alarm(int LED1, int LED2)
+{
+	HAL_GPIO_WritePin(GPIOA ,LED2, GPIO_PIN_SET);
+	HAL_GPIO_WritePin(GPIOA ,LED1, GPIO_PIN_SET);
+	HAL_Delay(LONG_TIME_PAUSE);
+	HAL_GPIO_WritePin(GPIOA ,LED2, GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(GPIOA ,LED1, GPIO_PIN_RESET);
+	HAL_Delay(LONG_TIME_PAUSE);
+
+
+}
+
+
+void switchLedLogika(char mode){
+  if (mode == 0)
+    {
+      blinking(LED_RED_PIN, LED_GREEN_PIN);
+    }
+    else if (mode == 1)
+    {
+      fast_blinking(LED_RED_PIN, LED_GREEN_PIN);
+    }
+
+    else if (mode == 2)
+    {
+      alarm(LED_RED_PIN, LED_GREEN_PIN);
+    }
+
+}
+
+
+
 
 
 
