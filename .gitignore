@@ -1,0 +1,44 @@
+# Файли збірки (об’єкти, бінарники, elf, hex, map)
+*.o
+*.d
+*.elf
+*.bin
+*.hex
+*.map
+*.axf
+*.list
+
+# Тимчасові файли IDE
+*.launch
+*.log
+*.bak
+*.swp
+*.tmp
+
+# Файли CubeIDE / Eclipse
+.settings/
+.cproject
+.project
+.build/
+Debug/
+Release/
+
+# Файли CubeMX
+Drivers/STM32*_CubeMX_*.c
+*.ioc.user
+*.ioc.backup
+
+# Git ignore для компільованих бібліотек / external
+*.a
+*.lib
+
+# Інші тимчасові або автоматично згенеровані файли
+*.dep
+*.dmp
+*.swo
+*.swp
+*.sdf
+*.launch
+
+# VSCode (якщо використовується)
+.vscode/
